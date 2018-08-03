@@ -1,9 +1,7 @@
 import { Action, Reducer } from 'redux';
-import { variables } from '../variables'
 import { ActionType, StartGameAction, PlayerMoveAction, Direction } from './actions';
 import { Player, Position } from '../contract';
-import * as connector from '../SignalRConnector';
-import { utility } from '../utility';
+import { serverFuncs } from '../serverFuncs';
 
 export type PlayerStoreState = Player;
 
@@ -69,7 +67,7 @@ export const reducer: Reducer<PlayerStoreState> = (state: PlayerStoreState = emp
         case ActionType.PlayerMove:
             const position = getNewPosition(state.position, (action as PlayerMoveAction).direction);
             if (position !== state.position) {
-                utility.playerMoveTo(position);
+                serverFuncs.playerMoveTo(position);
                 return Object.assign({}, state, {
                     position: position
                 });

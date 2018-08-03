@@ -3,7 +3,7 @@ import { Rank, Player, World, Dot, Position, Players } from './contract';
 import { store } from './boot-client';
 import { actionCreators } from './store/WorldAction';
 
-const connection = new signalR.HubConnectionBuilder()
+export const connection = new signalR.HubConnectionBuilder()
     .withUrl("/worldHub")
     .build();
 
@@ -37,17 +37,3 @@ connection.start()
         console.log("Connected!!");
     })
     .catch(err => console.error(err.toString()));
-
-export function intialize() {
-}
-
-(window as any).connector = {
-    playerMoveTo: (position: Position) => {
-        connection.invoke("PlayerMoveTo", position)
-            .catch(err => console.error(err.toString()));
-    },
-    playerJoin: (userName: string) => {
-        connection.invoke("PlayerJoin", userName)
-            .catch(err => console.error(err.toString()));
-    }
-}

@@ -50,6 +50,9 @@ const history = createBrowserHistory({ basename: baseUrl });
 const initialState = (window as any).initialReduxState as ApplicationState;
 export const store = configureStore(history, initialState);
 
+// TODO: Shouldn't store connection to window object
+(window as any).connection = connector.connection;
+
 function renderApp() {
     // This code starts up the React app when it runs in a browser. It sets up the routing configuration
     // and injects the app into a DOM element.
@@ -64,8 +67,6 @@ function renderApp() {
 }
 
 renderApp();
-
-connector.intialize();
 
 // Allow Hot Module Replacement
 if (module.hot) {

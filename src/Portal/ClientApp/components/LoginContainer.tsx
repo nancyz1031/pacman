@@ -1,7 +1,7 @@
 import { connect, Dispatch } from 'react-redux';
 import { ApplicationState } from '../store';
 import { Login, StateProps, DispatchProps } from './Login';
-import { utility } from '../utility';
+import { serverFuncs } from '../serverFuncs';
 
 function mapStateToProps(state: ApplicationState): StateProps {
     return {
@@ -11,7 +11,7 @@ function mapStateToProps(state: ApplicationState): StateProps {
 function mapDispatchToProps(dispatch: Dispatch<any>): DispatchProps {
     return {
         login: (userName: string) => {
-            utility.join(userName);
+            serverFuncs.playerJoin(userName);
         }
     };
 }

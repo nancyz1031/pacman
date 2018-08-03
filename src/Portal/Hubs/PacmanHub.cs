@@ -20,7 +20,7 @@ namespace Editor.Hubs
         private static object RankSyncRoot = new object();
         private static World world = new World();
 
-        #region From client
+        #region Invoked from client
 
         public void PlayerJoin(string userName)
         {
@@ -32,17 +32,6 @@ namespace Editor.Hubs
             TryFillDotsToWorld();
             RefreshRanks();
             RefreshPlayers();
-        }
-
-        public void Start()
-        {
-            if (world.Players.TryGetValue(GetPlayerId(), out Player player))
-            {
-                player.Score = 0;
-                player.Position = Utility.GetRandomPosition();
-                SendSystemMessage($"{player.Name} joined game");
-                Clients.Caller.SendAsync(StartGameFunc, player.Id, world);
-            }
         }
 
         public void PlayerMoveTo(Position position)
@@ -61,13 +50,24 @@ namespace Editor.Hubs
             }
         }
 
+        #endregion
+
         public override Task OnDisconnectedAsync(Exception exception)
         {
             this.PlayerLeave(GetPlayerId());
             return base.OnDisconnectedAsync(exception);
         }
 
-        #endregion
+        private void Start()
+        {
+            if (world.Players.TryGetValue(GetPlayerId(), out Player player))
+            {
+                player.Score = 0;
+                player.Position = Utility.GetRandomPosition();
+                SendSystemMessage($"{player.Name} joined game");
+                Clients.Caller.SendAsync(StartGameFunc, player.Id, world);
+            }
+        }
 
         private void SendSystemMessage(string message)
         {
