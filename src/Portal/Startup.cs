@@ -48,7 +48,7 @@ namespace Editor
             app.UseSignalR(routes =>
             {
                 //routes.MapHub<ChatHub>("/chatHub");
-                routes.MapHub<WorldHub>("/worldHub");
+                routes.MapHub<PacmanHub>("/worldHub");
             });
             app.UseMvc(routes =>
             {

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Editor.Hubs
 {
-    public class WorldHub : Hub
+    public class PacmanHub : Hub
     {
         private const string SystemMessageFunc = "SystemMessage";
         private const string UpdateRanksFunc = "UpdateRanks";
@@ -20,7 +20,56 @@ namespace Editor.Hubs
         private static object RankSyncRoot = new object();
         private static World world = new World();
 
-        private void SendMessage(string message)
+        #region From client
+
+        public void PlayerJoin(string userName)
+        {
+            var id = Guid.NewGuid().ToString();
+            SetPlayerId(id);
+            var user = new Player(id, userName);
+            world.Players[user.Id] = user;
+            Start();
+            TryFillDotsToWorld();
+            RefreshRanks();
+            RefreshPlayers();
+        }
+
+        public void Start()
+        {
+            if (world.Players.TryGetValue(GetPlayerId(), out Player player))
+            {
+                player.Score = 0;
+                player.Position = Utility.GetRandomPosition();
+                SendSystemMessage($"{player.Name} joined game");
+                Clients.Caller.SendAsync(StartGameFunc, player.Id, world);
+            }
+        }
+
+        public void PlayerMoveTo(Position position)
+        {
+            var playerId = GetPlayerId();
+            world.Players.TryGetValue(playerId, out Player player);
+            player.Position = position;
+            Clients.Others.SendAsync(PlayerMoveToFunc, playerId, position);
+            var dots = world.Dots.Values.ToArray();
+            foreach (var dot in dots)
+            {
+                if (dot.Position.Equals(position))
+                {
+                    PlayerTryEatDot(playerId, dot.Id);
+                }
+            }
+        }
+
+        public override Task OnDisconnectedAsync(Exception exception)
+        {
+            this.PlayerLeave(GetPlayerId());
+            return base.OnDisconnectedAsync(exception);
+        }
+
+        #endregion
+
+        private void SendSystemMessage(string message)
         {
             Clients.All.SendAsync(SystemMessageFunc, message);
         }
@@ -48,38 +97,9 @@ namespace Editor.Hubs
             Clients.All.SendAsync(UpdatePlayersFunc, world.Players);
         }
 
-        public override Task OnDisconnectedAsync(Exception exception)
+        private void SetPlayerId(string playerId)
         {
-            this.PlayerLeave(GetPlayerId());
-            return base.OnDisconnectedAsync(exception);
-        }
-
-        public void PlayerJoin(string userName)
-        {
-            var id = Guid.NewGuid().ToString();
-            SetPlayerId(id);
-            var user = new Player(id, userName);
-            world.Players[user.Id] = user;
-            Start();
-            TryFillDots();
-            RefreshRanks();
-            RefreshPlayers();
-        }
-
-        public void Start()
-        {
-            if (world.Players.TryGetValue(GetPlayerId(), out Player player))
-            {
-                player.Score = 0;
-                player.Position = GetRandomPosition();
-                SendMessage($"{player.Name} joined game");
-                Clients.Caller.SendAsync(StartGameFunc, player.Id, world);
-            }
-        }
-
-        private void SetPlayerId(string id)
-        {
-            this.Context.Items["id"] = id;
+            this.Context.Items["id"] = playerId;
         }
 
         private string GetPlayerId()
@@ -99,31 +119,15 @@ namespace Editor.Hubs
             world.Players.TryRemove(playerId, out Player player);
             if (player != null)
             {
-                SendMessage($"{player.Name} left game");
+                SendSystemMessage($"{player.Name} left game");
                 RefreshRanks();
                 RefreshPlayers();
             }
         }
 
-        public void PlayerMoveTo(Position position)
+        private void PlayerTryEatDot(string playerId, string dotId)
         {
-            var playerId = GetPlayerId();
-            world.Players.TryGetValue(playerId, out Player player);
-            player.Position = position;
-            Clients.Others.SendAsync(PlayerMoveToFunc, playerId, position);
-            var dots = world.Dots.Values.ToArray();
-            foreach (var dot in dots)
-            {
-                if (dot.Position.Equals(position))
-                {
-                    TryEatDot(playerId, dot.Id);
-                }
-            }
-        }
-
-        private void TryEatDot(string userId, string dotId)
-        {
-            if (!world.Players.TryGetValue(userId, out Player user))
+            if (!world.Players.TryGetValue(playerId, out Player user))
             {
                 return;
             }
@@ -136,15 +140,15 @@ namespace Editor.Hubs
                     return;
                 }
 
-                SendMessage($"{user.Name} eat a dot!");
+                SendSystemMessage($"{user.Name} eat a dot!");
                 user.Score++;
                 world.Dots.TryRemove(dotId, out Dot dot);
-                TryFillDots();
+                TryFillDotsToWorld();
                 RefreshRanks();
             }
         }
 
-        private void TryFillDots()
+        private void TryFillDotsToWorld()
         {
             if (world.Dots.Count >= world.Variables.MaxDot)
             {
@@ -155,7 +159,7 @@ namespace Editor.Hubs
             {
                 while (world.Dots.Count < world.Variables.MaxDot)
                 {
-                    var dot = new Dot(GetRandomPosition());
+                    var dot = new Dot(Utility.GetRandomPosition());
                     world.Dots[dot.Id] = dot;
                 }
 
@@ -164,17 +168,6 @@ namespace Editor.Hubs
                     Clients.All.SendAsync(UpdateDotsFunc, world.Dots.Values.ToList());
                 }
             }
-        }
-
-        static Random r = new Random();
-
-        private static Position GetRandomPosition()
-        {
-            return new Position()
-            {
-                X = r.Next(0, world.Variables.WorldWidth),
-                Y = r.Next(0, world.Variables.WorldHeight)
-            };
         }
     }
 }

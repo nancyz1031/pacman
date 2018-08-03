@@ -62,9 +62,10 @@ export const reducer: Reducer<WorldStoreState> = (state: WorldStoreState = null,
             const position = (action as OtherPlayerMoveToAction).position;
             const changes = {};
             changes[id] = Object.assign({}, state.players[id], { position: position });
-            return Object.assign({}, state, {
-                players: Object.assign({}, state, changes)
+            const newState = Object.assign({}, state, {
+                players: Object.assign({}, state.players, changes)
             });
+            return newState;
 
         default:
             break;
