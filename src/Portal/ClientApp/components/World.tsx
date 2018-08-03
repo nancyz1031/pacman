@@ -8,7 +8,10 @@ import { OtherPlayersContainer } from './OtherPlayersContainer';
 import { LoginContainer } from './LoginContainer';
 import { MessagesContainer } from './MessagesContainer';
 
-export type StateProps = contract.World;
+export interface StateProps {
+    connected: boolean;
+    world: contract.World;
+}
 
 export interface DispatchProps {
 
@@ -16,7 +19,12 @@ export interface DispatchProps {
 
 export class World extends React.Component<StateProps & DispatchProps, {}> {
     public render() {
-        const world = this.props;
+        const props = this.props;
+        if (!props.connected) {
+            return <div>Connecting to server...</div>
+        }
+
+        const world = this.props.world;
         if (!world || !world.variables) {
             return <LoginContainer />;
         }
@@ -31,7 +39,7 @@ export class World extends React.Component<StateProps & DispatchProps, {}> {
                     <OtherPlayersContainer />
                     <PlayerContainer />
                 </div>
-                <RanksContainer />            
+                <RanksContainer />
             </div>
             <MessagesContainer />
         </div>;

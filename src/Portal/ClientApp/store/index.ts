@@ -1,10 +1,12 @@
 import * as PlayerAction from './playerAction';
 import * as WorldAction from './WorldAction';
+import * as ConnectionStateAction from './ConnectionStateAction';
 
 // The top-level state object
 export interface ApplicationState {
     player: PlayerAction.PlayerStoreState;
     world: WorldAction.WorldStoreState;
+    connected: boolean;
 }
 
 // Whenever an action is dispatched, Redux will update each top-level application state property using
@@ -13,4 +15,5 @@ export interface ApplicationState {
 export const reducers = {
     player: PlayerAction.reducer,
     world: WorldAction.reducer,
+    connected: ConnectionStateAction.reducer,
 };

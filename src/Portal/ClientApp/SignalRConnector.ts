@@ -2,6 +2,7 @@ import * as signalR from '@aspnet/signalr';
 import { Rank, Player, World, Dot, Position, Players } from './contract';
 import { store } from './boot-client';
 import { actionCreators } from './store/WorldAction';
+import { connectionStateActionActionCreators } from './store/ConnectionStateAction';
 
 export const connection = new signalR.HubConnectionBuilder()
     .withUrl("/worldHub")
@@ -34,6 +35,7 @@ connection.on("SystemMessage", (message: string) => {
 
 connection.start()
     .then(() => {
+        store.dispatch(connectionStateActionActionCreators.updateConnected());
         console.log("Connected!!");
     })
     .catch(err => console.error(err.toString()));

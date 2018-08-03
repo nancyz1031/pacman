@@ -3,7 +3,10 @@ import { ApplicationState } from '../store';
 import { World, StateProps, DispatchProps } from './World';
 
 function mapStateToProps(state: ApplicationState): StateProps {
-    return state.world;
+    return {
+        connected:state.connected,
+        world:state.world
+    };
 }
 
 function mapDispatchToProps(dispatch: Dispatch<any>): DispatchProps {

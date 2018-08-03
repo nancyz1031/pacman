@@ -9,6 +9,7 @@ export const enum ActionType {
     StartGame,
     OtherPlayerMoveTo,
     SystemMessage,
+    Connected,
 }
 
 export enum Direction {
